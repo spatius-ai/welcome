@@ -18,10 +18,15 @@ const FACES = {
 };
 const VOICES = { julian: 'ash', nadia: 'coral', grace: 'sage', victor: 'onyx' };
 const STARTER_URL = 'https://starter.spatius.app/v1';
+const isStarter = (u) => /starter\.spatius\.app|demotius-starter/.test(u || '');
 
 export function settings(env) {
   const face = (env.WELCOME_FACE || 'julian').toLowerCase();
   const ownKey = !!env.OPENAI_API_KEY;
+  // Your own OpenAI key only ever goes to OpenAI (or the OPENAI_BASE_URL you set), never to the starter service.
+  // Without a key, requests go to the starter service, signed with your Spatius key.
+  const starterUrl = env.SPATIUS_STARTER_URL || STARTER_URL;
+  const base = ownKey ? (env.OPENAI_BASE_URL && !isStarter(env.OPENAI_BASE_URL) ? env.OPENAI_BASE_URL : 'https://api.openai.com/v1') : starterUrl;
   return {
     apiKey: env.SPATIUS_API_KEY || '',
     appId: env.SPATIUS_APP_ID || '',
@@ -33,7 +38,7 @@ export function settings(env) {
     lang: env.WELCOME_LANG || 'en',
     company: env.WELCOME_COMPANY || 'our company',
     openai: {
-      base: (env.OPENAI_BASE_URL || (ownKey ? 'https://api.openai.com/v1' : STARTER_URL)).replace(/\/$/, ''),
+      base: base.replace(/\/$/, ''),
       key: ownKey ? env.OPENAI_API_KEY : env.SPATIUS_API_KEY,
       starter: !ownKey,
       chat: env.OPENAI_CHAT_MODEL || 'gpt-4.1-mini',
@@ -54,13 +59,13 @@ function starterHeaders(res) {
 
 // A clear message for each way OpenAI or the starter service can say no.
 async function openaiError(res, s) {
-  const text = await res.text().catch(() => '');
   if (s.openai.starter && res.status === 402)
     return { status: 402, error: 'Your starter minutes are used. Add your own OPENAI_API_KEY to .env to keep going.', starterUsed: true };
   if (s.openai.starter && (res.status === 404 || res.status >= 500 || res.status === 0))
     return { status: 503, error: 'The starter service is not available right now. Try again, or add your own OPENAI_API_KEY to .env.' };
   if (res.status === 401) return { status: 401, error: s.openai.starter ? 'Your Spatius API key was not accepted. Check it at app.spatius.ai.' : 'Your OPENAI_API_KEY was not accepted.' };
-  return { status: 502, error: `The language service answered with HTTP ${res.status}.`, detail: text.slice(0, 300) };
+  if (res.status === 429) return { status: 429, error: 'Too many requests to the language service. Please wait a moment.' };
+  return { status: 502, error: `The language service answered with HTTP ${res.status}.` };
 }
 
 async function callOpenAI(s, path, init) {
@@ -68,7 +73,8 @@ async function callOpenAI(s, path, init) {
     const starter = s.openai.starter ? { 'X-Spatius-Region': s.region } : {};
     return await fetch(`${s.openai.base}${path}`, { ...init, headers: { Authorization: `Bearer ${s.openai.key}`, ...starter, ...(init.headers || {}) } });
   } catch {
-    return new Response('', { status: 0 });
+    // network failure: a plain object, because a Response cannot have status 0
+    return { ok: false, status: 0, body: null, headers: new Headers(), json: async () => ({}), text: async () => '' };
   }
 }
 
@@ -90,7 +96,8 @@ async function sessionToken(s) {
     err.status = res.status === 401 || res.status === 403 ? 401 : 502;
     throw err;
   }
-  tokenCache = { token: body.sessionToken, until: Date.now() + 50 * 60_000, key: s.apiKey };
+  // reuse a token for 20 minutes, so every visitor gets one with at least 40 minutes left
+  tokenCache = { token: body.sessionToken, until: Date.now() + 20 * 60_000, key: s.apiKey };
   return body.sessionToken;
 }
 
@@ -146,7 +153,9 @@ async function ask(s, request, knowledge) {
   let out = {};
   try { out = JSON.parse(body.choices?.[0]?.message?.content || '{}'); } catch { /* fall through */ }
   const answer = String(out.answer || '').trim() || "Sorry, I don't have an answer for that.";
-  return json(200, { question, answer, source: String(out.source || ''), url: String(out.url || ''), quote: String(out.quote || '') }, { ...extra, ...starterHeaders(res) });
+  // only plain web links may come back (an answer can be steered by text on the website)
+  const url = /^https?:\/\//i.test(String(out.url || '')) ? String(out.url) : '';
+  return json(200, { question, answer, source: String(out.source || ''), url, quote: String(out.quote || '') }, { ...extra, ...starterHeaders(res) });
 }
 
 // what a voice can say: no brackets, no markdown, no dashes read aloud
@@ -166,9 +175,23 @@ async function speak(s, request) {
   return new Response(res.body, { status: 200, headers: { 'Content-Type': 'audio/pcm;rate=24000', 'Cache-Control': 'no-store', ...starterHeaders(res) } });
 }
 
+// A simple limit per visitor, so nobody can spend your keys by calling the API in a loop.
+// It is kept in memory: enough for one server; use your host's rate limiting for more.
+const hits = new Map();
+function tooMany(request) {
+  const ip = request.headers.get('cf-connecting-ip') || String(request.headers.get('x-forwarded-for') || '').split(',').pop().trim() || 'local';
+  const now = Date.now();
+  const list = (hits.get(ip) || []).filter((t) => now - t < 60_000);
+  list.push(now);
+  hits.set(ip, list);
+  if (hits.size > 10_000) hits.clear();
+  return list.length > 30;
+}
+
 export async function handle(request, env, knowledge) {
   const url = new URL(request.url);
   const s = settings(env);
+  if (url.pathname.startsWith('/api/') && tooMany(request)) return json(429, { error: 'Too many requests. Please wait a minute.' });
   try {
     if (url.pathname === '/api/session' && request.method === 'GET') {
       if (!s.apiKey || !s.appId) return json(500, { error: 'Add SPATIUS_API_KEY and SPATIUS_APP_ID to .env, then restart.' });

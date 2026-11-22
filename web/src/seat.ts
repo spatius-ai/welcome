@@ -48,8 +48,7 @@ export async function canDraw(): Promise<boolean> {
 }
 
 export async function getSession(): Promise<Session> {
-  const code = new URLSearchParams(location.search).get('code');
-  const r = await fetch(`/api/session${code ? `?code=${encodeURIComponent(code)}` : ''}`);
+  const r = await fetch('/api/session');
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Could not start a Spatius session.');
   return r.json();
 }

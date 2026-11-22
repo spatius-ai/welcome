@@ -39,18 +39,29 @@ async function serveFile(path, res) {
   }
 }
 
+const MAX_BODY = 6_000_000; // a recorded question is far smaller
+
 createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  if (url.pathname.startsWith('/api/')) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    if (!url.pathname.startsWith('/api/')) return await serveFile(url.pathname, res);
     const chunks = [];
-    for await (const c of req) chunks.push(c);
+    let size = 0;
+    for await (const c of req) {
+      size += c.length;
+      if (size > MAX_BODY) { res.writeHead(413, { 'Content-Type': 'application/json' }); return res.end('{"error":"Too large."}'); }
+      chunks.push(c);
+    }
     const request = new Request(url, { method: req.method, headers: req.headers, body: ['GET', 'HEAD'].includes(req.method) ? undefined : Buffer.concat(chunks) });
     const response = (await handle(request, process.env, knowledge)) || new Response('{"error":"Not found"}', { status: 404 });
     res.writeHead(response.status, Object.fromEntries(response.headers));
-    if (response.body) for await (const c of response.body) res.write(c);
-    return res.end();
+    if (response.body) for await (const c of response.body) { if (res.destroyed) break; res.write(c); }
+    res.end();
+  } catch (err) {
+    // the visitor went away mid-request, or something else failed: answer if we still can, keep running
+    if (!res.headersSent && !res.destroyed) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end('{"error":"Something went wrong."}'); }
+    else res.destroy();
   }
-  return serveFile(url.pathname, res);
 }).listen(PORT, () => {
   console.log(`\n  WELCOME is running: http://localhost:${PORT}\n`);
   console.log(`  Face: ${s.name}    Knowledge: ${knowledge.parts.length} parts from ${knowledge.files.length} file(s)`);

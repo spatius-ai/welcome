@@ -83,7 +83,8 @@ async function boot() {
     cfg = (await getSession()) as Config;
   } catch (e) {
     greet.hidden = false;
-    $('#ww-greet-text').textContent = (e as Error).message;
+    $('#ww-greet-text').textContent = 'The assistant is not available right now.';
+    console.warn('[welcome]', (e as Error).message);
     return;
   }
   ($('.ww-face img') as HTMLImageElement).src = FACE_IMG[cfg.face] || FACE_IMG.julian;
@@ -136,7 +137,7 @@ async function voice(text: string): Promise<() => Promise<Int16Array | null>> {
   return async () => {
     for (;;) {
       if (held.length >= 9600 || (ended && held.length >= 2)) {
-        const whole = ended ? held.length - (held.length % 2) : held.length - (held.length % 2);
+        const whole = held.length - (held.length % 2);
         const out = new Int16Array(held.slice(0, whole).buffer);
         held = held.slice(whole);
         return out;

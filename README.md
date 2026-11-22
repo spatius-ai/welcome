@@ -4,7 +4,7 @@
 
 WELCOME is a talking avatar for any website. A visitor asks a question by voice or by typing, and a live Spatius avatar answers out loud, with lip sync and captions. It answers only from the company's own knowledge: the pages of its website and any files you add. When it can, it shows the visitor where the answer is on the page.
 
-This repository is a small, complete template. It runs on your computer in a few minutes with only a Spatius API key, and it is written to be read and changed: one server file, one widget, one folder of knowledge.
+This repository is a small, complete template. It runs on your computer in a few minutes with only your Spatius API key and App ID, and it is written to be read and changed: one API file (shared by the local server and Cloudflare), one widget, one folder of knowledge.
 
 It is for developers who want a website help desk, front desk or product guide with a face, and for anyone who wants to see how a Spatius avatar is wired to speech, an LLM and a web page.
 
@@ -58,7 +58,7 @@ The same `server/app.mjs` runs in both places. It only uses the standard `fetch`
 | Mode | Command | Knowledge |
 | --- | --- | --- |
 | On your computer | `npm start` | Read from `knowledge/` at start |
-| Cloudflare Workers, local | `npm run dev:cf` | Bundled at build time |
+| Cloudflare Workers, local | `cp .dev.vars.example .dev.vars`, then `npm run dev:cf` | Bundled at build time |
 | Cloudflare Workers, online | `npm run deploy` or the Deploy button | Bundled at build time |
 
 **Starter minutes or your own OpenAI key.** Speech to text, the answer and the voice use OpenAI. Without `OPENAI_API_KEY`, WELCOME uses free Spatius starter minutes (30 minutes per Spatius key), sent through `starter.spatius.app` with your Spatius key. When they are used, the widget asks you to add your own key. With `OPENAI_API_KEY` set, WELCOME calls OpenAI directly and the starter service is not used.
@@ -69,9 +69,11 @@ The browser talks to the server through three routes.
 
 | Route | Request | Response |
 | --- | --- | --- |
-| `GET /api/session` | none | `appId`, `region`, `sessionToken`, the avatar ID, the greeting and the suggested questions |
+| `GET /api/session` | none | `appId`, `region`, `sessionToken`, `avatars`, `face`, `name`, `lang`, `company`, `greeting`, `questions`, `starter`, `knowledgeParts` |
 | `POST /api/ask` | JSON `{ "text": "..." }`, or recorded audio as the body | `{ question, answer, source, url, quote }` |
 | `POST /api/speak` | JSON `{ "text": "..." }` | The voice as raw PCM16, mono, 24 kHz, streamed |
+
+Errors come back as `{ "error": "..." }` with a matching HTTP status; when starter minutes are used up the status is 402 and `starterUsed` is `true`.
 
 The voice is passed to the avatar exactly as it arrives (24 kHz), with no resampling, so the lips and the sound stay together and the voice stays clear. `quote` is a few words copied from the knowledge; the widget looks for them on the page to power "Show me".
 
@@ -84,7 +86,7 @@ The voice is passed to the avatar exactly as it arrives (24 kHz), with no resamp
 
 ## Setup and local development
 
-You need Node 20 or newer, a Spatius account (for an API key and App ID from [app.spatius.ai](https://app.spatius.ai)) and a browser with WebGPU or WebGL2.
+You need Node 20.3 or newer, a Spatius account (for an API key and App ID from [app.spatius.ai](https://app.spatius.ai)) and a browser with WebGPU or WebGL2.
 
 ```sh
 git clone https://github.com/spatius-ai/welcome
@@ -103,7 +105,10 @@ npm start
 
 The example shop moves to `examples/` so it does not mix with your company. You can also put your own `.md` or `.txt` files in `knowledge/`. Small knowledge is sent to the model whole; large knowledge is cut down to the parts that best match each question.
 
-**Put it on your own website.** Copy the widget into your site: the stylesheet line and the script line at the top and bottom of `web/index.html`, and the `/api` routes from the server.
+**Put it on your own website.** The widget calls `/api/...` and loads `/assets/...` on the same address as the page, so the page, the built files and the API must be served from one origin:
+
+1. Replace the example shop in `web/index.html` with your own page, or copy its two WELCOME lines (the stylesheet line and the script line) into your page.
+2. Run `npm run build`. Serve the `dist/` folder and the `/api` routes together, for example with `server/node.mjs` behind your domain, or deploy to Cloudflare, which does both.
 
 ## Environment configuration
 
@@ -113,7 +118,8 @@ The example shop moves to `examples/` so it does not mix with your company. You 
 | `SPATIUS_APP_ID` | Yes | Your Spatius App ID |
 | `SPATIUS_REGION` | No | `us-west` (default) or your region |
 | `OPENAI_API_KEY` | No | Your OpenAI key; without it, starter minutes are used |
-| `OPENAI_BASE_URL` | No | Another OpenAI-compatible address |
+| `OPENAI_BASE_URL` | No | Another OpenAI-compatible address for your own key. Your OpenAI key is never sent to the starter service. |
+| `SPATIUS_STARTER_URL` | No | Another starter service address (for testing) |
 | `WELCOME_COMPANY` | No | The company name the avatar speaks for |
 | `WELCOME_FACE` | No | `julian`, `nadia`, `grace` or `victor` |
 | `SPATIUS_AVATAR_ID` | No | Any other avatar from your Spatius account |
@@ -128,6 +134,7 @@ On Cloudflare, put the keys in `.dev.vars` (local) or as secrets (online); the o
 ## Security and deployment guidance
 
 - Keys stay on the server. The browser only receives a short-lived Spatius session token.
+- The `/api` routes are open to anyone who can reach your site, and each answer spends your OpenAI key or starter minutes and your Spatius minutes. WELCOME allows 30 API requests per minute per visitor; for a public site, also turn on your host's rate limiting (for example Cloudflare rate limiting rules) and set a monthly limit in your OpenAI account.
 - `.env` and `.dev.vars` are ignored by git. Never commit them.
 - WELCOME answers only from your knowledge and is told not to guess. Check your knowledge files before you go live: whatever is in them can be said out loud.
 - Starter minutes are for trying WELCOME. For a live website, use your own OpenAI key and set limits in your OpenAI account.
