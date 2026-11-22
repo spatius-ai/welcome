@@ -39,7 +39,8 @@ welcome/
     learn.mjs               reads a website into knowledge/
     build-knowledge.mjs     bundles knowledge/ for Cloudflare
   server/
-    app.mjs                 the API: session token, answer, voice
+    brain.mjs               WELCOME itself: the answering rules, reading the answer, a clean voice line
+    app.mjs                 the API: session token, answer, voice (uses brain.mjs)
     knowledge.mjs           reads the knowledge files and picks the parts for each question
     node.mjs                runs the app on your computer
     worker.mjs              runs the app on Cloudflare Workers
@@ -51,7 +52,7 @@ welcome/
     public/assets/          fonts, faces and the example site's pictures
 ```
 
-The same `server/app.mjs` runs in both places. It only uses the standard `fetch`, `Request` and `Response`, so `node.mjs` and `worker.mjs` are thin wrappers around it.
+The code has three parts, so you can keep the part you need. `server/brain.mjs` (with `knowledge.mjs`) is what makes it a help desk; `server/app.mjs` connects it to OpenAI and the browser; `web/src/seat.ts` connects the avatar. The same `server/app.mjs` runs in both places. It only uses the standard `fetch`, `Request` and `Response`, so `node.mjs` and `worker.mjs` are thin wrappers around it.
 
 ## Runtime modes
 
@@ -76,6 +77,18 @@ The browser talks to the server through three routes.
 Errors come back as `{ "error": "..." }` with a matching HTTP status; when starter minutes are used up the status is 402 and `starterUsed` is `true`.
 
 The voice is passed to the avatar exactly as it arrives (24 kHz), with no resampling, so the lips and the sound stay together and the voice stays clear. `quote` is a few words copied from the knowledge; the widget looks for them on the page to power "Show me".
+
+## Use it in your own app
+
+Pick the row that matches what you have.
+
+| You have | Do this |
+| --- | --- |
+| Any website, and you want WELCOME on it | Build it once and serve it with its API (see "Put it on your own website" under Setup), or deploy to Cloudflare. The widget is two lines in your page. |
+| Your own backend, in any language | Copy `server/brain.mjs` and `server/knowledge.mjs` (or port them: plain functions, no network). Call `answerMessages()` before your LLM call and `readAnswer()` after it. |
+| Your own web page, and you want the avatar | Copy `web/src/seat.ts`. It loads a Spatius avatar into any element and plays 24 kHz PCM16 audio on it with lip sync. |
+| A LiveKit voice agent | Keep your agent and its room. Add the Spatius avatar to your room with the `livekit-plugins-spatius` plugin (see [spatius.ai/livekit](https://www.spatius.ai/livekit/)), and call `answerMessages()` / `readAnswer()` from your agent's LLM step. |
+| Another LLM, or an OpenAI-compatible gateway | Set `OPENAI_BASE_URL` with your own `OPENAI_API_KEY`. The brain works with any chat model that can return JSON. |
 
 ## Technical stack
 

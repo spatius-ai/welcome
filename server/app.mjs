@@ -8,7 +8,7 @@
 // OpenAI is reached through OPENAI_BASE_URL. With your own OPENAI_API_KEY it is OpenAI itself.
 // Without it, the requests go to the Spatius starter service, signed with your Spatius key.
 
-import { pickContext } from './knowledge.mjs';
+import { answerMessages, readAnswer, speakable } from './brain.mjs';
 
 const FACES = {
   julian: 'dbb01388-7c57-47bf-ab59-c492caeb9d90',
@@ -101,18 +101,7 @@ async function sessionToken(s) {
   return body.sessionToken;
 }
 
-// ---------- the answer ----------
-const SYSTEM = (s, context) => `You are ${s.name}, the voice of ${s.company}'s website. You answer visitor questions out loud.
-Rules:
-- You speak FOR the company, as "we" and "our". Questions like "what do you do" or "who are you" are about the company and its products, never about you as an assistant.
-- Answer ONLY from the KNOWLEDGE below. If the answer is not there, say you don't know, and point to the contact details if the knowledge has them.
-- Speak naturally, in 1 to 3 short sentences. No lists, no markdown, no links read out, no emoji.
-- Answer in the language the visitor used. If unsure, use "${s.lang}".
-- Return JSON: {"answer": string, "source": string (the title of the knowledge section you used, or ""), "url": string (its URL, or ""), "quote": string (3 to 8 words copied exactly from that section, so the page can show where it is, or "")}.
-
-KNOWLEDGE:
-${context}`;
-
+// ---------- the answer (the rules are in brain.mjs) ----------
 async function transcribe(s, request) {
   const type = request.headers.get('content-type') || 'audio/webm';
   const ext = type.includes('mp4') ? 'mp4' : type.includes('ogg') ? 'ogg' : type.includes('wav') ? 'wav' : 'webm';
@@ -145,21 +134,13 @@ async function ask(s, request, knowledge) {
       model: s.openai.chat,
       temperature: 0.2,
       response_format: { type: 'json_object' },
-      messages: [{ role: 'system', content: SYSTEM(s, pickContext(knowledge, question)) }, { role: 'user', content: question }],
+      messages: answerMessages({ name: s.name, company: s.company, lang: s.lang }, knowledge, question),
     }),
   });
   if (!res.ok) { const e = await openaiError(res, s); return json(e.status, e); }
   const body = await res.json().catch(() => ({}));
-  let out = {};
-  try { out = JSON.parse(body.choices?.[0]?.message?.content || '{}'); } catch { /* fall through */ }
-  const answer = String(out.answer || '').trim() || "Sorry, I don't have an answer for that.";
-  // only plain web links may come back (an answer can be steered by text on the website)
-  const url = /^https?:\/\//i.test(String(out.url || '')) ? String(out.url) : '';
-  return json(200, { question, answer, source: String(out.source || ''), url, quote: String(out.quote || '') }, { ...extra, ...starterHeaders(res) });
+  return json(200, { question, ...readAnswer(body.choices?.[0]?.message?.content) }, { ...extra, ...starterHeaders(res) });
 }
-
-// what a voice can say: no brackets, no markdown, no dashes read aloud
-const speakable = (t) => String(t || '').replace(/\[[^\]]*\]|\*+/g, '').replace(/[–—]/g, ', ').replace(/\s+/g, ' ').trim().slice(0, 800);
 
 async function speak(s, request) {
   const { text } = await request.json().catch(() => ({}));
