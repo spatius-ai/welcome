@@ -40,6 +40,7 @@ welcome/
     build-knowledge.mjs     bundles knowledge/ for Cloudflare
   server/
     brain.mjs               WELCOME itself: the answering rules, reading the answer, a clean voice line
+    voices.mjs              optional ElevenLabs voices, one per person (used when ELEVENLABS_API_KEY is set)
     app.mjs                 the API: session token, answer, voice (uses brain.mjs)
     knowledge.mjs           reads the knowledge files and picks the parts for each question
     node.mjs                runs the app on your computer
@@ -133,6 +134,7 @@ The example shop moves to `examples/` so it does not mix with your company. You 
 | `SPATIUS_APP_ID` | Yes | Your Spatius App ID |
 | `SPATIUS_REGION` | No | `us-west` (default) or your region |
 | `OPENAI_API_KEY` | No | Your OpenAI key; without it, starter minutes are used |
+| `ELEVENLABS_API_KEY` | No | ElevenLabs voices: each person has their own voice, and a native voice for Arabic. Without it, the OpenAI voice is used, and it is also used if ElevenLabs refuses a request. Model: `ELEVENLABS_MODEL` (default `eleven_v4_turbo`) |
 | `OPENAI_BASE_URL` | No | Another OpenAI-compatible address for your own key. Your OpenAI key is never sent to the starter service. |
 | `SPATIUS_STARTER_URL` | No | Another starter service address (for testing) |
 | `WELCOME_COMPANY` | No | The company name the avatar speaks for |
