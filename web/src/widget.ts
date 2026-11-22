@@ -45,7 +45,7 @@ root.innerHTML = `
         <label class="ww-field"><input id="ww-q" autocomplete="off" placeholder="Ask a question" aria-label="Your question"><button class="ww-send" type="submit" aria-label="Send">${ICON.send}</button></label>
         <button class="ww-mic" type="button" id="ww-mic" aria-label="Speak" aria-pressed="false">${ICON.mic}</button>
       </form>
-      <div class="ww-powered hp-type-mono">Powered by Spatius</div>
+      <div class="ww-powered hp-type-mono"><img src="/assets/spatius-mark.svg" alt="">Powered by Spatius</div>
     </div>
   </section>`;
 document.body.appendChild(root);
