@@ -1,0 +1,90 @@
+/* WELCOME widget. Spatius Website design system values, scoped to #welcome-widget
+   so the host website keeps its own look. */
+#welcome-widget { --line: rgb(35 36 47 / .1); --focus: color-mix(in srgb, #6363A7 70%, white);
+  position: fixed; right: 24px; bottom: 24px; z-index: 2147483000; display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+  background: transparent; color: var(--lab-text); -webkit-font-smoothing: antialiased; }
+#welcome-widget *, #welcome-widget *::before, #welcome-widget *::after { box-sizing: border-box; }
+#welcome-widget [hidden] { display: none !important; }
+:where(#welcome-widget) button { font: inherit; }
+#welcome-widget :is(button, input, a):focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+#welcome-widget .ww-card { background: var(--lab-surface); border-radius: var(--surface-card-radius); box-shadow: var(--surface-raised-card), 0 24px 60px -24px rgb(35 31 91 / .38); }
+
+#welcome-widget .ww-greet { width: 300px; max-width: calc(100vw - 32px); padding: 16px 18px; animation: ww-rise 420ms cubic-bezier(.22,1,.36,1) both 400ms; }
+#welcome-widget .ww-tag { color: var(--lab-accent); text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+#welcome-widget .ww-greet p { margin: 0; }
+#welcome-widget .ww-dot { width: 6px; height: 6px; border-radius: 50%; background: #3FB27F; box-shadow: 0 0 0 3px rgb(63 178 127 / .18); flex: none; }
+
+#welcome-widget .ww-launcher { display: flex; align-items: center; gap: 12px; padding: 6px 20px 6px 6px; border: 0; cursor: pointer; border-radius: var(--surface-radius-full);
+  background: var(--lab-surface); color: var(--lab-text); box-shadow: var(--surface-raised-card), 0 12px 28px -16px rgb(35 31 91 / .35); transition: box-shadow 150ms ease-out, transform 120ms ease-out; }
+#welcome-widget .ww-launcher:hover { box-shadow: var(--lum-card-shadow-hover), 0 14px 30px -16px rgb(35 31 91 / .4); }
+#welcome-widget .ww-launcher:active { transform: scale(.98); }
+#welcome-widget .ww-face-wrap { position: relative; display: block; flex: none; }
+#welcome-widget .ww-face { display: block; width: 52px; height: 52px; border-radius: 50%; overflow: hidden; background: #ddd; }
+#welcome-widget .ww-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#welcome-widget .ww-breath { position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--lab-accent); opacity: 0; animation: ww-breath 2.8s ease-out infinite; }
+#welcome-widget .ww-txt { text-align: left; } #welcome-widget .ww-txt span { display: block; }
+#welcome-widget .ww-txt .hp-type-mono { color: var(--lab-muted); text-transform: uppercase; }
+
+#welcome-widget .ww-panel { width: 380px; max-width: calc(100vw - 32px); max-height: calc(100vh - 48px); display: flex; flex-direction: column; overflow: hidden; animation: ww-rise 360ms cubic-bezier(.22,1,.36,1) both; }
+#welcome-widget .ww-stage { position: relative; height: 260px; background: var(--lab-inverse-2); flex: none; overflow: hidden; }
+#welcome-widget .ww-avatar { position: absolute; inset: 0; }
+#welcome-widget .ww-avatar canvas { width: 100% !important; height: 100% !important; display: block; }
+#welcome-widget .ww-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--lab-inverse-copy); }
+#welcome-widget .ww-stage::after { content: ""; position: absolute; inset: auto 0 0 0; height: 50%; background: linear-gradient(180deg, transparent, rgb(21 17 49 / .8)); pointer-events: none; }
+#welcome-widget .ww-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; gap: 8px; z-index: 2; }
+#welcome-widget .ww-pill { display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: var(--surface-radius-full); background: rgb(21 17 49 / .55); color: var(--lab-inverse-text); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); text-transform: uppercase; }
+#welcome-widget .ww-icon { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgb(35 36 47 / .12); background: rgb(255 255 255 / .68); display: grid; place-items: center; cursor: pointer; color: var(--lab-text); flex: none; }
+#welcome-widget .ww-icon:hover { background: rgb(255 255 255 / .9); }
+#welcome-widget .ww-icon svg { width: 16px; height: 16px; }
+#welcome-widget .ww-sp { margin-left: auto; }
+#welcome-widget .ww-caption { position: absolute; left: 18px; right: 18px; bottom: 14px; z-index: 2; color: var(--lab-inverse-text); min-height: 48px; }
+#welcome-widget .ww-caption span { opacity: .3; transition: opacity 120ms ease-out; } #welcome-widget .ww-caption span.on { opacity: 1; }
+#welcome-widget .ww-bars { display: none; gap: 3px; align-items: center; height: 18px; }
+#welcome-widget .ww-bars i { width: 3px; border-radius: 2px; background: var(--lab-inverse-text); animation: ww-bar 900ms ease-in-out infinite; }
+#welcome-widget .ww-bars i:nth-child(2) { animation-delay: -300ms; } #welcome-widget .ww-bars i:nth-child(3) { animation-delay: -600ms; } #welcome-widget .ww-bars i:nth-child(4) { animation-delay: -150ms; }
+#welcome-widget .ww-listening .ww-bars { display: inline-flex; }
+
+#welcome-widget .ww-starter { padding: 10px 18px; background: var(--lab-soft); color: var(--lab-copy); }
+#welcome-widget .ww-starter.ww-used { color: var(--lab-text); }
+#welcome-widget .ww-convo { padding: 16px 18px 4px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 80px; flex: 1; }
+#welcome-widget .ww-tip { color: var(--lab-muted); margin: 0; }
+#welcome-widget .ww-you { align-self: flex-end; max-width: 82%; background: var(--lab-soft); color: var(--lab-text); padding: 9px 13px; border-radius: 14px 14px 4px 14px; }
+#welcome-widget .ww-bot { align-self: flex-start; max-width: 94%; color: var(--lab-copy); }
+#welcome-widget .ww-bot p { margin: 0 0 6px; }
+#welcome-widget .ww-err { color: var(--lab-text); }
+#welcome-widget .ww-src { color: var(--lab-muted); text-transform: uppercase; margin-right: 10px; }
+#welcome-widget .ww-show { display: inline-flex; align-items: center; gap: 6px; color: var(--lab-accent); font: 550 14px/20px var(--hp-font-sans); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: none; }
+#welcome-widget .ww-show:hover { text-decoration: underline; text-underline-offset: 3px; }
+#welcome-widget .ww-show svg { width: 16px; height: 16px; }
+
+#welcome-widget .ww-dock { padding: 12px 18px 14px; border-top: 1px solid var(--line); flex: none; }
+#welcome-widget .ww-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+#welcome-widget .ww-chips:empty { display: none; }
+#welcome-widget .ww-chip { border: 0; cursor: pointer; padding: 7px 12px; border-radius: var(--surface-radius-full); background: var(--lab-soft); color: var(--lab-accent); }
+#welcome-widget .ww-chip:hover { background: #E2E0F7; }
+#welcome-widget .ww-ask { display: flex; gap: 10px; align-items: center; }
+#welcome-widget .ww-field { flex: 1; position: relative; display: block; }
+#welcome-widget .ww-field input { width: 100%; height: 54px; padding: 14px 46px 14px 15px; border-radius: var(--surface-inner-radius); border: 1px solid var(--line); background: var(--lab-page); color: var(--lab-text); font: 400 16px/24px var(--hp-font-sans); outline: none; }
+#welcome-widget .ww-field input::placeholder { color: var(--lab-muted); }
+#welcome-widget .ww-send { position: absolute; right: 7px; top: 7px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: transparent; color: var(--lab-copy); cursor: pointer; display: grid; place-items: center; }
+#welcome-widget .ww-send svg { width: 16px; height: 16px; }
+#welcome-widget .ww-mic { width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; flex: none; background: var(--lab-accent); color: #fff; position: relative; transition: background 150ms ease-out; }
+#welcome-widget .ww-mic:hover { background: #57579A; }
+#welcome-widget .ww-mic svg { width: 24px; height: 24px; }
+#welcome-widget .ww-mic.ww-on { background: var(--lab-inverse); }
+#welcome-widget .ww-mic.ww-on::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--lab-accent); animation: ww-breath 1.6s ease-out infinite; }
+#welcome-widget .ww-powered { margin-top: 10px; color: var(--lab-muted); text-transform: uppercase; }
+
+@keyframes ww-breath { 0% { opacity: .5; transform: scale(.92); } 70%, 100% { opacity: 0; transform: scale(1.18); } }
+@keyframes ww-rise { from { opacity: 0; transform: translateY(12px); } }
+@keyframes ww-bar { 0%, 100% { height: 4px; } 50% { height: 16px; } }
+
+/* "Show me" mark on the host page */
+.ww-lit { outline: 2px solid #6363A7 !important; outline-offset: 6px; border-radius: 10px; box-shadow: 0 0 0 10px rgb(99 99 167 / .12) !important; transition: box-shadow 260ms ease-out; }
+
+@media (max-width: 520px) {
+  #welcome-widget { right: 16px; left: 16px; bottom: 16px; }
+  #welcome-widget .ww-panel { width: 100%; max-width: 100%; max-height: calc(100vh - 32px); }
+  #welcome-widget .ww-stage { height: 220px; }
+}
+@media (prefers-reduced-motion: reduce) { #welcome-widget *, #welcome-widget *::before, #welcome-widget *::after { animation: none !important; transition-duration: 1ms !important; } }

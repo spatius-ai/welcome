@@ -1,0 +1,70 @@
+/* Maple Bikes: the example website that comes with WELCOME. Replace it with your own site. */
+.maple { --green: #23382B; --green-2: #34503D; --cream: #F7F3EA; --ink: #1F2A22; --muted: #5E6A60; --rust: #C6532E;
+  container-type: inline-size; background: var(--cream); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.maple * { box-sizing: border-box; }
+.maple .serif { font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; letter-spacing: -.01em; }
+.maple a { color: inherit; text-decoration: none; }
+.maple .shop-card { padding: 0; background-color: transparent; box-shadow: none; border-radius: 0; }
+
+.maple .nav { display: flex; align-items: center; gap: 28px; padding: 18px 32px; }
+.maple .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; }
+.maple .logo b { width: 26px; height: 26px; border-radius: 50%; background: var(--rust); box-shadow: inset 0 0 0 5px var(--cream), inset 0 0 0 7px var(--rust); }
+.maple .links { display: flex; gap: 24px; margin-left: auto; color: var(--muted); font-size: 15px; }
+.maple .cta { padding: 9px 16px; border-radius: 999px; background: var(--green); color: var(--cream); font-size: 14px; font-weight: 600; white-space: nowrap; }
+
+.maple .hero { position: relative; margin: 0 16px; border-radius: 18px !important; overflow: hidden; min-height: 420px; display: flex; align-items: flex-end;
+  background: var(--green) url(hero.webp) center / cover no-repeat; }
+.maple .hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(20 33 25 / .88) 0%, rgb(20 33 25 / .55) 45%, rgb(20 33 25 / 0) 75%); }
+.maple .hero-text { position: relative; padding: 40px; max-width: 520px; color: var(--cream); }
+.maple .kicker { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; opacity: .8; margin: 0 0 12px; }
+.maple .hero h1 { margin: 0 0 14px; font-size: 48px; line-height: 1.05; font-weight: 400; }
+.maple .hero p { margin: 0 0 22px; opacity: .9; }
+.maple .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.maple .btn-light { padding: 11px 18px; border-radius: 999px; background: var(--cream); color: var(--green); font-weight: 600; font-size: 14px; }
+.maple .btn-ghost { padding: 11px 18px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgb(247 243 234 / .5); color: var(--cream); font-weight: 600; font-size: 14px; }
+
+.maple .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 16px 16px 0; border-radius: 14px; overflow: hidden; background: rgb(35 56 43 / .12); }
+.maple .facts div { background: #FFFDF8; padding: 18px 22px; }
+.maple .facts b { display: block; font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+.maple .facts span { font-size: 15px; }
+
+.maple .section { padding: 56px 32px 0; }
+.maple .section h2 { margin: 0 0 22px; font-size: 32px; font-weight: 400; }
+.maple .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.maple .story { background: #FFFDF8; border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1px rgb(35 56 43 / .08); }
+.maple .story img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; display: block; }
+.maple .story .t { padding: 20px 22px 24px; }
+.maple .story h3 { margin: 0 0 6px; font-size: 22px; font-weight: 400; }
+.maple .story p { margin: 0; color: var(--muted); }
+
+.maple .info { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 40px 32px 0; }
+.maple .info > div { border-top: 1px solid rgb(35 56 43 / .15); padding-top: 16px; }
+.maple .info h3 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
+.maple .info p { margin: 0; color: var(--muted); }
+
+.maple .foot { margin-top: 56px; padding: 22px 32px 120px; color: var(--muted); font-size: 13px; border-top: 1px solid rgb(35 56 43 / .1); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* "Show me" mark from the avatar */
+.maple .lit, .maple .ww-lit { outline: 2px solid #6363A7; outline-offset: 4px; border-radius: 14px; box-shadow: 0 0 0 10px rgb(99 99 167 / .12); }
+
+@container (max-width: 760px) {
+  .maple .links { display: none; }
+  .maple .cta { margin-left: auto; }
+  .maple .hero { min-height: 360px; }
+  .maple .hero h1 { font-size: 36px; }
+  .maple .hero-text { padding: 28px; }
+}
+@container (max-width: 560px) {
+  .maple .nav { padding: 14px 18px; }
+  .maple .hero { margin: 0 10px; }
+  .maple .hero::before { background: linear-gradient(0deg, rgb(20 33 25 / .9) 0%, rgb(20 33 25 / .5) 60%, rgb(20 33 25 / .1) 100%); }
+  .maple .facts { grid-template-columns: minmax(0, 1fr); margin: 10px 10px 0; }
+  .maple .pair, .maple .info { grid-template-columns: minmax(0, 1fr); }
+  .maple .section, .maple .info { padding-left: 18px; padding-right: 18px; }
+  .maple .section h2 { font-size: 26px; }
+}
+
+/* keep the shop's own text colours even inside the demo frame */
+.maple .hero p, .maple .hero .kicker, .maple .hero h1 { color: var(--cream); }
+.maple .story h3, .maple .info h3 { color: var(--ink); }
+.maple .story p, .maple .info p { color: var(--muted); }

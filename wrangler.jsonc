@@ -1,0 +1,15 @@
+// Cloudflare Workers settings for WELCOME. Used by "Deploy to Cloudflare" and by `npm run deploy`.
+{
+  "name": "welcome",
+  "main": "server/worker.mjs",
+  "compatibility_date": "2025-09-01",
+  "assets": { "directory": "./dist", "binding": "ASSETS" },
+  "build": { "command": "npm run build:cf" },
+  "vars": {
+    "SPATIUS_REGION": "us-west",
+    "WELCOME_COMPANY": "Maple Bikes",
+    "WELCOME_FACE": "julian",
+    "WELCOME_LANG": "en",
+    "WELCOME_QUESTIONS": "When are you open?|Can you fix a flat tyre?|Can I return a bike?"
+  }
+}

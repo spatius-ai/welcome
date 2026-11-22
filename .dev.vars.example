@@ -1,0 +1,6 @@
+# Secrets for Cloudflare. "Deploy to Cloudflare" asks for these.
+# From app.spatius.ai:
+SPATIUS_API_KEY=
+SPATIUS_APP_ID=
+# Optional. Without it, WELCOME uses 30 free Spatius starter minutes.
+OPENAI_API_KEY=

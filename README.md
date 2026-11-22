@@ -1,0 +1,138 @@
+# WELCOME chatbot
+
+## Overview
+
+WELCOME is a talking avatar for any website. A visitor asks a question by voice or by typing, and a live Spatius avatar answers out loud, with lip sync and captions. It answers only from the company's own knowledge: the pages of its website and any files you add. When it can, it shows the visitor where the answer is on the page.
+
+This repository is a small, complete template. It runs on your computer in a few minutes with only a Spatius API key, and it is written to be read and changed: one server file, one widget, one folder of knowledge.
+
+It is for developers who want a website help desk, front desk or product guide with a face, and for anyone who wants to see how a Spatius avatar is wired to speech, an LLM and a web page.
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/spatius-ai/welcome)
+
+## Why this matters
+
+Most website chatbots are a text box. WELCOME gives the company a face and a voice, answers only from what the company has published, and says "I don't know" instead of guessing. It runs on your own Spatius account, so you can put it on your own site and change everything.
+
+## User flow
+
+1. The visitor opens a page with WELCOME on it and sees a small launcher in the corner with the avatar's face.
+2. The visitor clicks it, then speaks or types a question, or picks one of the suggested questions.
+3. The server turns speech into text, finds the answer in the knowledge, and turns the answer into speech.
+4. The avatar says the answer live, with captions, and lists the page the answer came from.
+5. If the answer is on the current page, "Show me" scrolls to it and marks it.
+
+## Architecture
+
+```text
+welcome/
+  README.md
+  LICENSE
+  package.json
+  vite.config.mjs           builds the web page and copies the avatar engine files
+  wrangler.jsonc            Cloudflare Workers settings
+  .env.example              settings for running on your computer
+  .dev.vars.example         secrets for Cloudflare
+  knowledge/
+    maple-bikes.md          example knowledge; replace it with yours
+  scripts/
+    learn.mjs               reads a website into knowledge/
+    build-knowledge.mjs     bundles knowledge/ for Cloudflare
+  server/
+    app.mjs                 the API: session token, answer, voice
+    knowledge.mjs           reads the knowledge files and picks the parts for each question
+    node.mjs                runs the app on your computer
+    worker.mjs              runs the app on Cloudflare Workers
+  web/
+    index.html              an example website (Maple Bikes) with the widget on it
+    src/widget.ts           the launcher, the panel, the microphone and "Show me"
+    src/widget.css          the widget's look, kept inside the widget
+    src/seat.ts             the Spatius avatar: load, connect, speak
+    public/assets/          fonts, faces and the example site's pictures
+```
+
+The same `server/app.mjs` runs in both places. It only uses the standard `fetch`, `Request` and `Response`, so `node.mjs` and `worker.mjs` are thin wrappers around it.
+
+## Runtime modes
+
+| Mode | Command | Knowledge |
+| --- | --- | --- |
+| On your computer | `npm start` | Read from `knowledge/` at start |
+| Cloudflare Workers, local | `npm run dev:cf` | Bundled at build time |
+| Cloudflare Workers, online | `npm run deploy` or the Deploy button | Bundled at build time |
+
+**Starter minutes or your own OpenAI key.** Speech to text, the answer and the voice use OpenAI. Without `OPENAI_API_KEY`, WELCOME uses free Spatius starter minutes (30 minutes per Spatius key), sent through `starter.spatius.app` with your Spatius key. When they are used, the widget asks you to add your own key. With `OPENAI_API_KEY` set, WELCOME calls OpenAI directly and the starter service is not used.
+
+## Protocols and contracts
+
+The browser talks to the server through three routes.
+
+| Route | Request | Response |
+| --- | --- | --- |
+| `GET /api/session` | none | `appId`, `region`, `sessionToken`, the avatar ID, the greeting and the suggested questions |
+| `POST /api/ask` | JSON `{ "text": "..." }`, or recorded audio as the body | `{ question, answer, source, url, quote }` |
+| `POST /api/speak` | JSON `{ "text": "..." }` | The voice as raw PCM16, mono, 24 kHz, streamed |
+
+The voice is passed to the avatar exactly as it arrives (24 kHz), with no resampling, so the lips and the sound stay together and the voice stays clear. `quote` is a few words copied from the knowledge; the widget looks for them on the page to power "Show me".
+
+## Technical stack
+
+- Spatius avatar SDK (`@spatius/avatarkit`) in Direct mode, drawn in the browser
+- OpenAI: `gpt-4o-mini-transcribe` (speech to text), `gpt-4.1-mini` (answers), `gpt-4o-mini-tts` (voice); all can be changed in settings
+- Vite for the web page, plain Node for the local server, Cloudflare Workers for hosting
+- No database and no framework
+
+## Setup and local development
+
+You need Node 20 or newer, a Spatius account (for an API key and App ID from [app.spatius.ai](https://app.spatius.ai)) and a browser with WebGPU or WebGL2.
+
+```sh
+git clone https://github.com/spatius-ai/welcome
+cd welcome
+cp .env.example .env      # paste SPATIUS_API_KEY and SPATIUS_APP_ID
+npm install
+npm start                 # open http://localhost:3000
+```
+
+**Use your own website.** Read up to 50 public pages of your site into `knowledge/`, then restart:
+
+```sh
+npm run learn -- https://yourcompany.com
+npm start
+```
+
+The example shop moves to `examples/` so it does not mix with your company. You can also put your own `.md` or `.txt` files in `knowledge/`. Small knowledge is sent to the model whole; large knowledge is cut down to the parts that best match each question.
+
+**Put it on your own website.** Copy the widget into your site: the stylesheet line and the script line at the top and bottom of `web/index.html`, and the `/api` routes from the server.
+
+## Environment configuration
+
+| Setting | Needed | What it does |
+| --- | --- | --- |
+| `SPATIUS_API_KEY` | Yes | Your Spatius API key |
+| `SPATIUS_APP_ID` | Yes | Your Spatius App ID |
+| `SPATIUS_REGION` | No | `us-west` (default) or your region |
+| `OPENAI_API_KEY` | No | Your OpenAI key; without it, starter minutes are used |
+| `OPENAI_BASE_URL` | No | Another OpenAI-compatible address |
+| `WELCOME_COMPANY` | No | The company name the avatar speaks for |
+| `WELCOME_FACE` | No | `julian`, `nadia`, `grace` or `victor` |
+| `SPATIUS_AVATAR_ID` | No | Any other avatar from your Spatius account |
+| `WELCOME_LANG` | No | Default answer language, for example `en`, `es`, `zh`, `ar` |
+| `WELCOME_QUESTIONS` | No | Suggested questions, separated by `\|` |
+| `WELCOME_NAME`, `WELCOME_GREETING` | No | The avatar's name and first line |
+| `OPENAI_VOICE`, `OPENAI_CHAT_MODEL`, `OPENAI_STT_MODEL`, `OPENAI_TTS_MODEL` | No | Voice and models |
+| `PORT` | No | Local port, 3000 by default |
+
+On Cloudflare, put the keys in `.dev.vars` (local) or as secrets (online); the other settings are in `wrangler.jsonc` under `vars`.
+
+## Security and deployment guidance
+
+- Keys stay on the server. The browser only receives a short-lived Spatius session token.
+- `.env` and `.dev.vars` are ignored by git. Never commit them.
+- WELCOME answers only from your knowledge and is told not to guess. Check your knowledge files before you go live: whatever is in them can be said out loud.
+- Starter minutes are for trying WELCOME. For a live website, use your own OpenAI key and set limits in your OpenAI account.
+- The avatar SDK sends basic performance data to Spatius so failures can be found. See the [Spatius Terms of Service](https://www.spatius.ai/terms-of-service/).
+
+## License and use constraints
+
+The code in this repository is under the MIT License (see `LICENSE`). The Spatius avatar SDK (`@spatius/avatarkit`) and the Spatius service are not part of this license; they are covered by the [Spatius Terms of Service](https://www.spatius.ai/terms-of-service/). The fonts in `web/public/assets/fonts/` (Inter, Geist Mono, Space Grotesk) are under the SIL Open Font License; their license texts are in `web/public/assets/licenses/`. The example shop, its pictures and the face photos are examples for this template.

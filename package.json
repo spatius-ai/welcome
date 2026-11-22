@@ -1,0 +1,28 @@
+{
+  "name": "spatius-welcome",
+  "private": true,
+  "version": "0.1.0",
+  "description": "WELCOME: a talking avatar that answers your website visitors from your own knowledge. A Spatius template.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "start": "vite build --config vite.config.mjs --logLevel warn && node server/node.mjs",
+    "build": "vite build --config vite.config.mjs",
+    "serve": "node server/node.mjs",
+    "learn": "node scripts/learn.mjs",
+    "build:cf": "node scripts/build-knowledge.mjs && vite build --config vite.config.mjs --logLevel warn",
+    "dev:cf": "npm run build:cf && wrangler dev",
+    "deploy": "npm run build:cf && wrangler deploy"
+  },
+  "dependencies": {
+    "@spatius/avatarkit": "1.3.10",
+    "dotenv": "^16.4.0",
+    "vite": "^6.0.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
